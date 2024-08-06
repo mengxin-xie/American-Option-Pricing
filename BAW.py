@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import norm
 
-def priceEuropeanOption(option_type, S, X, T, r, b, v):
+def price_European_Option(option_type, S, X, T, r, b, v):
 
     d1 = (np.log(S/X) + (b + v ** 2 / 2) * T) / (v * (T) ** 0.5)
     d2 = d1 - v * (T) ** 0.5
@@ -14,22 +14,18 @@ def priceEuropeanOption(option_type, S, X, T, r, b, v):
     return bsp
 
 
-def priceAmericanOption(option_type_flag, S, X, T, r, b, v):
+def price_American_Option(option_type_flag, S, X, T, r, b, v):
     '''
     Barone-Adesi-Whaley
     '''
 
     if option_type_flag == 'Call':
-        return approximateAmericanCall(S, X, T, r, b, v)
+        return approximate_American_Call(S, X, T, r, b, v)
     elif option_type_flag == 'Put':
-        return approximateAmericanPut(S, X, T, r, b, v)
+        return approximate_American_Put(S, X, T, r, b, v)
 
-def approximateAmericanPut(S, X, T, r, b, v):
-    '''
-    Barone-Adesi-Whaley
-    '''
-
-    Sk = Kp(X, T, r, b, v)
+def approximate_American_Put(S, X, T, r, b, v):
+    Sk = Critical_Price_Put(X, T, r, b, v)
     N = 2 * b / v**2
     k = 2 * r / (v**2 * (1 - np.exp(-1 * r * T)))
     d1 = (np.log(Sk / X) + (b + (v**2) / 2) * T) / (v * (T)**0.5)
@@ -37,12 +33,12 @@ def approximateAmericanPut(S, X, T, r, b, v):
     a1 = -1 * (Sk / Q1) * (1 - np.exp((b - r) * T) * norm.cdf(-1 * d1))
 
     if S > Sk:
-        return priceEuropeanOption('Put', S, X, T, r, b, v) + a1 * (S / Sk)**Q1
+        return price_European_Option('Put', S, X, T, r, b, v) + a1 * (S / Sk)**Q1
     else:
         return X - S
 
 
-def Kp(X, T, r, b, v):
+def Critical_Price_Put(X, T, r, b, v):
     N = 2 * b / v ** 2
     m = 2 * r / v ** 2
     q1u = (-1 * (N - 1) - ((N - 1) ** 2 + 4 * m) ** 0.5) / 2
@@ -54,7 +50,7 @@ def Kp(X, T, r, b, v):
     d1 = (np.log(Si / X) + (b + v ** 2 / 2) * T) / (v * (T) ** 0.5)
     Q1 = (-1 * (N - 1) - ((N - 1) ** 2 + 4 * k) ** 0.5) / 2
     LHS = X - Si
-    RHS = priceEuropeanOption('Put', Si, X, T, r, b, v) - (
+    RHS = price_European_Option('Put', Si, X, T, r, b, v) - (
                 1 - np.exp((b - r) * T) * norm.cdf(-1 * d1)) * Si / Q1
     bi = -1 * np.exp((b - r) * T) * norm.cdf(-1 * d1) * (1 - 1 / Q1) - (
             1 + np.exp((b - r) * T) * norm.pdf(-d1) / (v * (T) ** 0.5)) / Q1
@@ -65,7 +61,7 @@ def Kp(X, T, r, b, v):
         Si = (X - RHS + bi * Si) / (1 + bi)
         d1 = (np.log(Si / X) + (b + v ** 2 / 2) * T) / (v * (T) ** 0.5)
         LHS = X - Si
-        RHS = priceEuropeanOption('Put', Si, X, T, r, b, v) - (
+        RHS = price_European_Option('Put', Si, X, T, r, b, v) - (
                     1 - np.exp((b - r) * T) * norm.cdf(-1 * d1)) * Si / Q1
         bi = -np.exp((b - r) * T) * norm.cdf(-1 * d1) * (1 - 1 / Q1) - (
                     1 + np.exp((b - r) * T) * norm.cdf(-1 * d1) / (v * (T) ** 0.5)) / Q1
@@ -73,27 +69,23 @@ def Kp(X, T, r, b, v):
     return Si
 
 
-def approximateAmericanCall(S, X, T, r, b, v):
-    '''
-    Barone-Adesi And Whaley
-    '''
-
+def approximate_American_Call(S, X, T, r, b, v):
     if b >= r:
-        return priceEuropeanOption('Call', S, X, T, r, b, v)
+        return price_European_Option('Call', S, X, T, r, b, v)
     else:
-        Sk = Kc(X, T, r, b, v)
+        Sk = Critical_Price_Call(X, T, r, b, v)
         N = 2 * b / v**2
         k = 2 * r / (v**2 * (1 - np.exp(-1 * r * T)))
         d1 = (np.log(Sk / X) + (b + (v**2) / 2) * T) / (v * (T**0.5))
         Q2 = (-1 * (N - 1) + ((N - 1)**2 + 4 * k))**0.5 / 2
         a2 = (Sk / Q2) * (1 - np.exp((b - r) * T) * norm.cdf(d1))
         if S < Sk:
-            return priceEuropeanOption('Call', S, X, T, r, b, v) + a2 * (S / Sk)**Q2
+            return price_European_Option('Call', S, X, T, r, b, v) + a2 * (S / Sk)**Q2
         else:
             return S - X
 
 
-def Kc(X, T, r, b, v):
+def Critical_Price_Call(X, T, r, b, v):
     N = 2 * b / v ** 2
     m = 2 * r / v ** 2
     q2u = (-1 * (N - 1) + ((N - 1) ** 2 + 4 * m) ** 0.5) / 2
@@ -105,7 +97,7 @@ def Kc(X, T, r, b, v):
     d1 = (np.log(Si / X) + (b + v ** 2 / 2) * T) / (v * (T) ** 0.5)
     Q2 = (-1 * (N - 1) + ((N - 1) ** 2 + 4 * k) ** 0.5) / 2
     LHS = Si - X
-    RHS = priceEuropeanOption('Call', Si, X, T, r, b, v) + (
+    RHS = price_European_Option('Call', Si, X, T, r, b, v) + (
                 1 - np.exp((b - r) * T) * norm.cdf(d1)) * Si / Q2
     bi = np.exp((b - r) * T) * norm.cdf(d1) * (1 - 1 / Q2) + (
                 1 - np.exp((b - r) * T) * norm.pdf(d1) / (v * (T) ** 0.5)) / Q2
@@ -116,7 +108,7 @@ def Kc(X, T, r, b, v):
         Si = (X + RHS - bi * Si) / (1 - bi)
         d1 = (np.log(Si / X) + (b + v ** 2 / 2) * T) / (v * (T) ** 0.5)
         LHS = Si - X
-        RHS = priceEuropeanOption('Call', Si, X, T, r, b, v) + (
+        RHS = price_European_Option('Call', Si, X, T, r, b, v) + (
                     1 - np.exp((b - r) * T) * norm.cdf(d1)) * Si / Q2
         bi = np.exp((b - r) * T) * norm.cdf(d1) * (1 - 1 / Q2) + (
                     1 - np.exp((b - r) * T) * norm.cdf(d1) / (v * (T) ** 0.5)) / Q2
@@ -139,5 +131,5 @@ if __name__ == "__main__":
 
     ITERATION_MAX_ERROR = 0.001
 
-    BAW_Price = priceAmericanOption('Put', S, X, T, r, b, v)
+    BAW_Price = price_American_Option('Put', S, X, T, r, b, v)
     print('BAW_Price: ', BAW_Price)
